@@ -78,3 +78,53 @@ public abstract class Account {
      *
      * @param username username baru
      */
+public void setUsername(String username) {
+        this.username = username;
+    }
+
+    /**
+     * Mengambil password akun.
+     *
+     * @return password akun
+     */
+    public String getPassword() {
+        return password;
+    }
+
+    /**
+     * Mengubah password.
+     *
+     * @param password password baru
+     */
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    /**
+     * Mengambil nama lengkap pemilik akun.
+     *
+     * @return nama lengkap pemilik akun
+     */
+    public String getNamaLengkap() {
+        return namaLengkap;
+    }
+
+    /**
+     * Mengubah nama lengkap.
+     *
+     * @param namaLengkap nama lengkap baru
+     */
+    public void setNamaLengkap(String namaLengkap) {
+        this.namaLengkap = namaLengkap;
+    }
+
+    /**
+     * Menampilkan akun sebagai teks "nama (ROLE)".
+     *
+     * @return teks representasi akun
+     */
+    @Override
+    public String toString() {
+        return namaLengkap + " (" + getRole() + ")";
+    }
+}
