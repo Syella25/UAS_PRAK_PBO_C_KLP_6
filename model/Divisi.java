@@ -43,3 +43,56 @@ public class Divisi {
     }
 
     /**
+ * Mengambil nama divisi.
+     *
+     * @return nama divisi
+     */
+    public String getNama() {
+        return nama;
+    }
+
+    /**
+     * Mengubah nama.
+     *
+     * @param nama nama baru
+     */
+    public void setNama(String nama) {
+        this.nama = nama;
+    }
+
+    /**
+     * Mengambil deskripsi divisi.
+     *
+     * @return deskripsi divisi
+     */
+    public String getDeskripsi() {
+        return deskripsi;
+    }
+
+    /**
+     * Mengubah deskripsi.
+     *
+     * @param deskripsi deskripsi baru
+     */
+    public void setDeskripsi(String deskripsi) {
+        this.deskripsi = deskripsi;
+    }
+
+    /**
+     * Mengambil kuota maksimal anggota.
+     *
+     * @return kuota maksimal anggota
+     */
+    public int getKuota() {
+        return kuota;
+    }
+
+    /**
+     * Mengubah kuota (validasi dilakukan oleh {@link DataStorage}).
+     *
+     * @param kuota kuota baru (validasi dilakukan oleh {@link DataStorage})
+     */
+    public void setKuota(int kuota) {
+        this.kuota = kuota;
+    }
+}
