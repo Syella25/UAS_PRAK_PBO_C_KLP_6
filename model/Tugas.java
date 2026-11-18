@@ -1,4 +1,30 @@
+package model;
 
+import java.time.LocalDate;
+
+/**
+ * Tugas yang dibuat admin untuk sebuah divisi. Member anggota divisi tersebut dapat mengambil
+ * dan menyelesaikan tugas, lalu admin memverifikasi hasilnya.
+ */
+public class Tugas {
+
+    /** Tahapan status sebuah tugas. */
+    public enum Status {
+        /** Belum diambil siapa pun. */
+        TERSEDIA,
+        /** Sedang dikerjakan seorang member. */
+        DIAMBIL,
+        /** Sudah diajukan selesai, menunggu verifikasi admin. */
+        MENUNGGU_VERIFIKASI,
+        /** Sudah diverifikasi admin. */
+        SELESAI
+    }
+
+    /** Penanda tugas yang belum punya pengambil. */
+    public static final String BELUM_DIAMBIL = "-";
+
+    private final String id;
+    private String judul;
 
 
 
