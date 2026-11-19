@@ -50,4 +50,49 @@ public class RiwayatMember {
         return String.join(DataStorage.PEMISAH, String.valueOf(id), username, DataStorage.bersih(aksi),
                 DataStorage.bersih(detail), waktu.format(RiwayatAdmin.FORMAT));
     }
-    
+
+    /**
+     * Mengambil nomor riwayat.
+     *
+     * @return nomor riwayat
+     */
+    public int getId() {
+        return id;
+    }
+
+    /**
+     * Mengambil username member terkait.
+     *
+     * @return username member terkait
+     */
+    public String getUsername() {
+        return username;
+    }
+
+    /**
+     * Mengambil jenis aksi.
+     *
+     * @return jenis aksi
+     */
+    public String getAksi() {
+        return aksi;
+    }
+
+    /**
+     * Mengambil keterangan aksi.
+     *
+     * @return keterangan aksi
+     */
+    public String getDetail() {
+        return detail;
+    }
+
+    /**
+     * Mengambil waktu aksi.
+     *
+     * @return waktu aksi
+     */
+    public LocalDateTime getWaktu() {
+        return waktu;
+    }
+}
