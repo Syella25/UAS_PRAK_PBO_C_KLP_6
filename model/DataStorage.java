@@ -113,6 +113,7 @@ private final List<Divisi> divisiList = new ArrayList<>();
     /**
      * Mengambil semua akun yang berperan sebagai member.
      *
+<<<<<<< HEAD
  * @return daftar member
      */
     public List<Member> getSemuaMember() {
@@ -193,3 +194,645 @@ private final List<Divisi> divisiList = new ArrayList<>();
      * @param admin     username admin pelaku
      * @param id        kode divisi
      * @param nama      nama baru
+=======
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    *
+     * @return salinan daftar anggota aktif (yang sudah diverifikasi)
+     */
+    public List<Anggota> getAnggotaList() {
+        return anggotaList.stream()
+                .filter(a -> a.getStatus() == Anggota.Status.AKTIF)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Mengambil anggota aktif pada satu divisi.
+     *
+     * @param idDivisi kode divisi
+     * @return daftar anggota aktif divisi tersebut
+     */
+    public List<Anggota> getAnggotaByDivisi(String idDivisi) {
+        return anggotaList.stream()
+                .filter(a -> a.getStatus() == Anggota.Status.AKTIF && a.getIdDivisi().equalsIgnoreCase(idDivisi))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Mencari anggota aktif berdasarkan kode.
+     *
+     * @param id kode anggota
+     * @return anggota yang ditemukan
+     * @throws NoSuchElementException jika kode tidak ada atau anggota belum aktif
+     */
+    public Anggota cariAnggota(String id) {
+        for (Anggota a : anggotaList) {
+            if (a.getStatus() == Anggota.Status.AKTIF && a.getId().equalsIgnoreCase(id.trim())) {
+                return a;
+            }
+        }
+        throw new NoSuchElementException("Anggota dengan kode '" + id + "' tidak ditemukan.");
+    }
+
+    /**
+     * Mencari data keanggotaan/pendaftaran milik seorang member, apa pun statusnya.
+     *
+     * @param username username member
+     * @return data anggota terkait, atau {@code null} jika member belum pernah mendaftar
+     */
+    public Anggota cariAnggotaByUsername(String username) {
+        for (Anggota a : anggotaList) {
+            if (a.punyaAkun() && a.getUsername().equalsIgnoreCase(username)) {
+                return a;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Mencari data anggota aktif milik seorang member.
+     *
+     * @param username username member
+     * @return anggota aktif terkait, atau {@code null} jika member belum resmi menjadi panitia
+     */
+    public Anggota cariAnggotaAktifByUsername(String username) {
+        Anggota a = cariAnggotaByUsername(username);
+        return (a != null && a.getStatus() == Anggota.Status.AKTIF) ? a : null;
+    }
+
+    /**
+     * Menambah anggota secara manual oleh admin.
+     *
+     * @param admin    username admin pelaku
+     * @param nama     nama anggota
+     * @param jabatan  jabatan anggota
+     * @param idDivisi kode divisi tujuan
+     * @return anggota yang dibuat
+     * @throws NoSuchElementException   jika divisi tidak ada
+     * @throws IllegalArgumentException jika input kosong
+     * @throws IllegalStateException    jika kuota divisi penuh
+     */
+    public Anggota tambahAnggota(String admin, String nama, String jabatan, String idDivisi) {
+        wajib(nama, "Nama anggota");
+        wajib(jabatan, "Jabatan");
+        Divisi divisi = cariDivisi(idDivisi);
+        cekKuota(divisi);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // ======================================================================
+    // RIWAYAT
+    // ======================================================================
+
+    /**
+     * Mengambil salinan seluruh riwayat aktivitas admin.
+     *
+     * @return salinan seluruh riwayat aktivitas admin
+     */
+    public List<RiwayatAdmin> getRiwayatAdmin() {
+        return new ArrayList<>(riwayatAdminList);
+    }
+
+    /**
+     * Mengambil salinan seluruh riwayat member (semua pengguna).
+     *
+     * @return salinan seluruh riwayat member (semua pengguna)
+     */
+    public List<RiwayatMember> getRiwayatMemberSemua() {
+        return new ArrayList<>(riwayatMemberList);
+    }
+
+    /**
+     * Mengambil riwayat milik satu member.
+     *
+     * @param username username member
+     * @return daftar riwayat member tersebut
+     */
+    public List<RiwayatMember> getRiwayatMember(String username) {
+        return riwayatMemberList.stream()
+                .filter(r -> r.getUsername().equalsIgnoreCase(username))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Mencatat aktivitas admin ke riwayat admin.
+     *
+     * @param admin  username admin pelaku
+     * @param aksi   jenis aksi
+     * @param detail keterangan aksi
+     */
+    private void catatAdmin(String admin, String aksi, String detail) {
+        int id = riwayatAdminList.stream().mapToInt(RiwayatAdmin::getId).max().orElse(0) + 1;
+        riwayatAdminList.add(new RiwayatAdmin(id, admin, aksi, detail));
+    }
+
+    /**
+     * Mencatat transaksi member ke riwayat member.
+     *
+     * @param username username member terkait
+     * @param aksi     jenis aksi
+     * @param detail   keterangan aksi
+     */
+    private void catatMember(String username, String aksi, String detail) {
+        int id = riwayatMemberList.stream().mapToInt(RiwayatMember::getId).max().orElse(0) + 1;
+        riwayatMemberList.add(new RiwayatMember(id, username, aksi, detail));
+    }
+
+    // ======================================================================
+    // PENYIMPANAN FILE
+    // ======================================================================
+
+    /**
+     * Membaca seluruh data dari file di folder penyimpanan, lalu menyiapkan data awal bila masih kosong
+     * (akun admin bawaan dan beberapa divisi contoh).
+     *
+     * @return true jika semua file berhasil dibaca, false jika terjadi kesalahan baca
+     */
+    public boolean muat() {
+        boolean berhasil = true;
+        try {
+            accounts.clear();
+            divisiList.clear();
+            anggotaList.clear();
+            tugasList.clear();
+            riwayatAdminList.clear();
+            riwayatMemberList.clear();
+
+            for (String[] p : bacaBaris("akun.txt")) {
+>>>>>>> 17076f93e2e01bb7ba328604a7fef5d46da7a361
