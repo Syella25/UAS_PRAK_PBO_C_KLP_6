@@ -113,3 +113,83 @@ private final List<Divisi> divisiList = new ArrayList<>();
     /**
      * Mengambil semua akun yang berperan sebagai member.
      *
+ * @return daftar member
+     */
+    public List<Member> getSemuaMember() {
+        List<Member> hasil = new ArrayList<>();
+        for (Account akun : accounts.values()) {
+            if (akun instanceof Member) {
+                hasil.add((Member) akun);
+            }
+        }
+        return hasil;
+    }
+
+    /**
+     * Mencari nama lengkap dari username (dipakai untuk tampilan).
+     *
+     * @param username username akun
+     * @return nama lengkap, atau username itu sendiri bila akun tidak ditemukan
+     */
+    public String namaDari(String username) {
+        Account akun = accounts.get(username.toLowerCase());
+        return akun == null ? username : akun.getNamaLengkap();
+    }
+
+    // ======================================================================
+    // DIVISI
+    // ======================================================================
+
+    /**
+     * Mengambil salinan daftar divisi.
+     *
+     * @return salinan daftar divisi
+     */
+    public List<Divisi> getDivisiList() {
+        return new ArrayList<>(divisiList);
+    }
+
+    /**
+     * Mencari divisi berdasarkan kode.
+     *
+     * @param id kode divisi (tidak membedakan huruf besar/kecil)
+     * @return divisi yang ditemukan
+     * @throws NoSuchElementException jika kode tidak ada
+     */
+    public Divisi cariDivisi(String id) {
+        for (Divisi d : divisiList) {
+            if (d.getId().equalsIgnoreCase(id.trim())) {
+                return d;
+            }
+        }
+        throw new NoSuchElementException("Divisi dengan kode '" + id + "' tidak ditemukan.");
+    }
+
+    /**
+     * Menambah divisi baru dengan kode otomatis.
+     *
+     * @param admin     username admin pelaku
+     * @param nama      nama divisi
+     * @param deskripsi deskripsi divisi
+     * @param kuota     kuota anggota
+     * @return divisi yang dibuat
+     * @throws IllegalArgumentException jika input tidak valid atau nama sudah ada
+     */
+    public Divisi tambahDivisi(String admin, String nama, String deskripsi, int kuota) {
+        wajib(nama, "Nama divisi");
+        if (kuota < 1) {
+            throw new IllegalArgumentException("Kuota minimal 1.");
+        }
+        cekNamaDivisiUnik(nama, null);
+        Divisi divisi = new Divisi(nextKode("D", idDivisi()), nama.trim(), deskripsi.trim(), kuota);
+        divisiList.add(divisi);
+        catatAdmin(admin, "TAMBAH DIVISI", divisi.getId() + " - " + divisi.getNama());
+        return divisi;
+    }
+
+    /**
+     * Mengubah data divisi.
+     *
+     * @param admin     username admin pelaku
+     * @param id        kode divisi
+     * @param nama      nama baru
