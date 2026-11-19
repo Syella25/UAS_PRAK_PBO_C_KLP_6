@@ -1,4 +1,57 @@
+package model;
 
+/**
+ * Data anggota panitia pada sebuah divisi.
+ * Anggota bisa ditambahkan langsung oleh admin (langsung AKTIF), atau berasal dari pendaftaran seorang
+ * {@link Member} yang harus diverifikasi admin terlebih dahulu (MENUNGGU, lalu AKTIF atau DITOLAK).
+ */
+public class Anggota {
+
+    /** Tahapan status keanggotaan panitia. */
+    public enum Status {
+        /** Pendaftaran sudah dikirim dan menunggu verifikasi admin. */
+        MENUNGGU,
+        /** Sudah diverifikasi dan resmi menjadi panitia divisi. */
+        AKTIF,
+        /** Pendaftaran ditolak admin (member boleh mendaftar ulang). */
+        DITOLAK
+    }
+
+    /** Penanda untuk anggota yang tidak terhubung ke akun member. */
+    public static final String TANPA_AKUN = "-";
+
+    private final String id;
+    private String nama;
+    private String jabatan;
+    private String idDivisi;
+    private final String username;
+    private Status status;
+
+    /**
+     * Membuat anggota yang langsung berstatus AKTIF (dipakai saat admin menambah anggota).
+     *
+     * @param id       kode unik anggota, misalnya "A01"
+     * @param nama     nama anggota
+     * @param jabatan  jabatan di divisi (Ketua, Sekretaris, Staff, dst.)
+     * @param idDivisi kode divisi tempat anggota bertugas
+     * @param username username akun member yang terhubung, atau {@link #TANPA_AKUN}
+     */
+    public Anggota(String id, String nama, String jabatan, String idDivisi, String username) {
+        this(id, nama, jabatan, idDivisi, username, Status.AKTIF);
+    }
+
+    /**
+     * Membuat anggota dengan status tertentu (dipakai untuk pendaftaran member dan saat memuat dari file).
+     *
+     * @param id       kode unik anggota
+     * @param nama     nama anggota
+     * @param jabatan  jabatan di divisi
+     * @param idDivisi kode divisi tujuan
+     * @param username username akun member yang terhubung, atau {@link #TANPA_AKUN}
+     * @param status   status keanggotaan
+     */
+    public Anggota(String id, String nama, String jabatan, String idDivisi, String username, Status status) {
+        this.id = id;
 
 
 

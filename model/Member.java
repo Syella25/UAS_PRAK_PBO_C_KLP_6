@@ -62,3 +62,29 @@ public class Member extends Account {
     }
 
     /**
+* Mengubah NIM.
+     *
+     * @param nim NIM baru
+     */
+    public void setNim(String nim) {
+        this.nim = nim;
+    }
+
+    /**
+     * Mengambil jurusan member.
+     *
+     * @return jurusan member
+     */
+    public String getJurusan() {
+        return jurusan;
+    }
+
+    /**
+     * Mengubah jurusan.
+     *
+     * @param jurusan jurusan baru
+     */
+    public void setJurusan(String jurusan) {
+        this.jurusan = jurusan;
+    }
+}
