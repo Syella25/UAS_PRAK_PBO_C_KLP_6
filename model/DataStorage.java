@@ -433,7 +433,86 @@ private final List<Divisi> divisiList = new ArrayList<>();
 
 
 
+     anggotaList.add(pendaftaran);
+        }
+        catatMember(username, "DAFTAR PANITIA", "Mendaftar ke divisi " + divisi.getNama() + " (menunggu verifikasi admin)");
+        return pendaftaran;
+    }
 
+    /**
+     * Mengambil daftar pendaftaran panitia yang menunggu verifikasi admin.
+     *
+     * @return daftar pendaftaran panitia yang menunggu verifikasi admin
+     */
+    public List<Anggota> getPendaftaranMenunggu() {
+        return anggotaList.stream()
+                .filter(a -> a.getStatus() == Anggota.Status.MENUNGGU)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Mencari pendaftaran panitia yang sedang menunggu verifikasi.
+     *
+     * @param id kode pendaftaran (kode anggota)
+     * @return pendaftaran yang ditemukan
+     * @throws NoSuchElementException jika kode tidak ada atau pendaftaran tidak sedang menunggu
+     */
+    public Anggota cariPendaftaran(String id) {
+        for (Anggota a : anggotaList) {
+            if (a.getStatus() == Anggota.Status.MENUNGGU && a.getId().equalsIgnoreCase(id.trim())) {
+                return a;
+            }
+        }
+        throw new NoSuchElementException("Pendaftaran dengan kode '" + id + "' tidak ditemukan atau sudah diverifikasi.");
+    }
+
+    /**
+     * Admin memverifikasi pendaftaran panitia. Jika diterima, member resmi menjadi anggota divisi (AKTIF);
+     * jika ditolak, statusnya menjadi DITOLAK dan member boleh mendaftar ulang.
+     *
+     * @param admin  username admin pelaku
+     * @param id     kode pendaftaran (kode anggota)
+     * @param terima true untuk menerima, false untuk menolak
+     * @throws NoSuchElementException jika pendaftaran tidak ditemukan
+     * @throws IllegalStateException  jika diterima tetapi kuota divisi sudah penuh
+     */
+    public void verifikasiPendaftaran(String admin, String id, boolean terima) {
+        Anggota pendaftaran = cariPendaftaran(id);
+        Divisi divisi = cariDivisi(pendaftaran.getIdDivisi());
+        String hasil;
+        if (terima) {
+            cekKuota(divisi);
+            pendaftaran.setStatus(Anggota.Status.AKTIF);
+            hasil = "DITERIMA";
+        } else {
+            pendaftaran.setStatus(Anggota.Status.DITOLAK);
+            hasil = "DITOLAK";
+        }
+        catatAdmin(admin, "VERIFIKASI PANITIA", pendaftaran.getNama() + " -> divisi " + divisi.getNama() + " " + hasil);
+        catatMember(pendaftaran.getUsername(), "VERIFIKASI PANITIA",
+                "Pendaftaran ke divisi " + divisi.getNama() + " " + hasil);
+    }
+
+    // ======================================================================
+    // TUGAS
+    // ======================================================================
+
+    /**
+     * Mengambil salinan daftar seluruh tugas.
+     *
+     * @return salinan daftar seluruh tugas
+     */
+    public List<Tugas> getTugasList() {
+        return new ArrayList<>(tugasList);
+    }
+
+    /**
+     * Mengambil tugas pada satu divisi.
+     *
+     * @param idDivisi kode divisi
+     * @return daftar tugas divisi tersebut
+     */
+    public List<Tugas> getTugasByDivisi(String idDivisi) {
 
 
 
@@ -753,3 +832,84 @@ private final List<Divisi> divisiList = new ArrayList<>();
             riwayatMemberList.clear();
 
             for (String[] p : bacaBaris("akun.txt")) {
+
+             *
+     * @param baris isi laporan, satu elemen per baris
+     * @return lokasi file laporan, atau {@code null} jika gagal menyimpan
+     */
+    public Path simpanLaporan(List<String> baris) {
+        try {
+            Files.createDirectories(folder);
+            Path file = folder.resolve("laporan.txt");
+            Files.write(file, baris, StandardCharsets.UTF_8);
+            return file;
+        } catch (IOException e) {
+            System.err.println("Gagal menyimpan laporan: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Membaca file teks menjadi daftar baris yang sudah dipecah per kolom.
+     *
+     * @param namaFile nama file di folder penyimpanan
+     * @return daftar baris (kosong jika file belum ada)
+     * @throws IOException jika file gagal dibaca
+     */
+    private List<String[]> bacaBaris(String namaFile) throws IOException {
+        List<String[]> hasil = new ArrayList<>();
+        Path file = folder.resolve(namaFile);
+        if (!Files.exists(file)) {
+            return hasil;
+        }
+        try (BufferedReader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
+            String baris;
+            while ((baris = reader.readLine()) != null) {
+                if (!baris.isBlank()) {
+                    hasil.add(baris.split("\\|", -1));
+                }
+            }
+        }
+        return hasil;
+    }
+
+    /**
+     * Menulis daftar baris ke file teks (menimpa isi lama).
+     *
+     * @param namaFile nama file di folder penyimpanan
+     * @param baris    isi file, satu elemen per baris
+     * @throws IOException jika file gagal ditulis
+     */
+    private void tulis(String namaFile, List<String> baris) throws IOException {
+        try (BufferedWriter writer = Files.newBufferedWriter(folder.resolve(namaFile), StandardCharsets.UTF_8)) {
+            for (String b : baris) {
+                writer.write(b);
+                writer.newLine();
+            }
+        }
+    }
+
+    /** Menyiapkan akun admin bawaan dan beberapa divisi contoh jika data masih kosong. */
+    private void siapkanDataAwal() {
+        boolean adaAdmin = accounts.values().stream().anyMatch(a -> a instanceof Admin);
+        if (!adaAdmin) {
+            accounts.put("admin", new Admin("admin", "admin123", "Administrator"));
+        }
+        if (divisiList.isEmpty()) {
+            divisiList.add(new Divisi("D01", "Acara", "Menyusun rundown dan menjalankan acara", 5));
+            divisiList.add(new Divisi("D02", "Humas", "Relasi sponsor dan media partner", 4));
+            divisiList.add(new Divisi("D03", "Konsumsi", "Penyediaan makanan dan minuman", 3));
+        }
+    }
+
+    // ======================================================================
+    // HELPER PRIVAT
+    // ======================================================================
+
+    /**
+     * Memastikan sebuah input tidak kosong.
+     *
+     * @param teks      input yang diperiksa
+     * @param namaField nama kolom untuk pesan kesalahan
+     * @throws IllegalArgumentException jika input kosong
+     */
