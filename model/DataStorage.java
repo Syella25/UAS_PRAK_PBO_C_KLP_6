@@ -113,8 +113,7 @@ private final List<Divisi> divisiList = new ArrayList<>();
     /**
      * Mengambil semua akun yang berperan sebagai member.
      *
-<<<<<<< HEAD
- * @return daftar member
+     * @return daftar member
      */
     public List<Member> getSemuaMember() {
         List<Member> hasil = new ArrayList<>();
@@ -194,7 +193,86 @@ private final List<Divisi> divisiList = new ArrayList<>();
      * @param admin     username admin pelaku
      * @param id        kode divisi
      * @param nama      nama baru
-=======
+     * @param deskripsi deskripsi baru
+     * @param kuota     kuota baru
+     * @throws NoSuchElementException   jika divisi tidak ada
+     * @throws IllegalArgumentException jika input tidak valid atau kuota lebih kecil dari jumlah anggota
+     */
+    public void editDivisi(String admin, String id, String nama, String deskripsi, int kuota) {
+        Divisi divisi = cariDivisi(id);
+        wajib(nama, "Nama divisi");
+        if (kuota < jumlahAnggota(divisi.getId()) || kuota < 1) {
+            throw new IllegalArgumentException("Kuota tidak boleh lebih kecil dari jumlah anggota saat ini ("
+                    + jumlahAnggota(divisi.getId()) + ").");
+        }
+        cekNamaDivisiUnik(nama, divisi.getId());
+        divisi.setNama(nama.trim());
+        divisi.setDeskripsi(deskripsi.trim());
+        divisi.setKuota(kuota);
+        catatAdmin(admin, "EDIT DIVISI", divisi.getId() + " - " + divisi.getNama());
+    }
+
+    /**
+     * Menghapus divisi beserta seluruh anggota dan tugas di dalamnya.
+     *
+     * @param admin username admin pelaku
+     * @param id    kode divisi
+     * @throws NoSuchElementException jika divisi tidak ada
+     */
+    public void hapusDivisi(String admin, String id) {
+        Divisi divisi = cariDivisi(id);
+        divisiList.remove(divisi);
+        anggotaList.removeIf(a -> a.getIdDivisi().equals(divisi.getId()));
+        tugasList.removeIf(t -> t.getIdDivisi().equals(divisi.getId()));
+        catatAdmin(admin, "HAPUS DIVISI", divisi.getId() + " - " + divisi.getNama());
+    }
+
+    /**
+     * Menghitung anggota aktif (sudah terverifikasi) pada sebuah divisi.
+     *
+     * @param idDivisi kode divisi
+     * @return jumlah anggota aktif
+     */
+    public int jumlahAnggota(String idDivisi) {
+        int jumlah = 0;
+        for (Anggota a : anggotaList) {
+            if (a.getStatus() == Anggota.Status.AKTIF && a.getIdDivisi().equalsIgnoreCase(idDivisi)) {
+                jumlah++;
+            }
+        }
+        return jumlah;
+    }
+
+    /**
+     * Mencari divisi yang namanya mengandung kata kunci.
+     *
+     * @param kataKunci kata kunci pencarian
+     * @return divisi yang cocok
+     */
+    public List<Divisi> cariDivisiByNama(String kataKunci) {
+        String kunci = kataKunci.trim().toLowerCase();
+        return divisiList.stream()
+                .filter(d -> d.getNama().toLowerCase().contains(kunci))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Mengambil daftar divisi terurut dari sisa kuota terbanyak.
+     *
+     * @return daftar divisi terurut dari sisa kuota terbanyak
+     */
+    public List<Divisi> urutkanDivisiBySisaKuota() {
+        List<Divisi> hasil = getDivisiList();
+        hasil.sort(Comparator.comparingInt((Divisi d) -> d.getKuota() - jumlahAnggota(d.getId())).reversed());
+        return hasil;
+    }
+
+    // ======================================================================
+    // ANGGOTA
+    // ======================================================================
+
+    /**
+     * Mengambil salinan daftar anggota aktif (yang sudah diverifikasi).
 
 
 
