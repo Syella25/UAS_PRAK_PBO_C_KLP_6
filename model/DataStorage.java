@@ -273,6 +273,226 @@ private final List<Divisi> divisiList = new ArrayList<>();
 
     /**
      * Mengambil salinan daftar anggota aktif (yang sudah diverifikasi).
+     *
+     * @return salinan daftar anggota aktif (yang sudah diverifikasi)
+     */
+    public List<Anggota> getAnggotaList() {
+        return anggotaList.stream()
+                .filter(a -> a.getStatus() == Anggota.Status.AKTIF)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Mengambil anggota aktif pada satu divisi.
+     *
+     * @param idDivisi kode divisi
+     * @return daftar anggota aktif divisi tersebut
+     */
+    public List<Anggota> getAnggotaByDivisi(String idDivisi) {
+        return anggotaList.stream()
+                .filter(a -> a.getStatus() == Anggota.Status.AKTIF && a.getIdDivisi().equalsIgnoreCase(idDivisi))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Mencari anggota aktif berdasarkan kode.
+     *
+     * @param id kode anggota
+     * @return anggota yang ditemukan
+     * @throws NoSuchElementException jika kode tidak ada atau anggota belum aktif
+     */
+    public Anggota cariAnggota(String id) {
+        for (Anggota a : anggotaList) {
+            if (a.getStatus() == Anggota.Status.AKTIF && a.getId().equalsIgnoreCase(id.trim())) {
+                return a;
+            }
+        }
+        throw new NoSuchElementException("Anggota dengan kode '" + id + "' tidak ditemukan.");
+    }
+
+    /**
+     * Mencari data keanggotaan/pendaftaran milik seorang member, apa pun statusnya.
+     *
+     * @param username username member
+     * @return data anggota terkait, atau {@code null} jika member belum pernah mendaftar
+     */
+    public Anggota cariAnggotaByUsername(String username) {
+        for (Anggota a : anggotaList) {
+            if (a.punyaAkun() && a.getUsername().equalsIgnoreCase(username)) {
+                return a;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Mencari data anggota aktif milik seorang member.
+     *
+     * @param username username member
+     * @return anggota aktif terkait, atau {@code null} jika member belum resmi menjadi panitia
+     */
+    public Anggota cariAnggotaAktifByUsername(String username) {
+        Anggota a = cariAnggotaByUsername(username);
+        return (a != null && a.getStatus() == Anggota.Status.AKTIF) ? a : null;
+    }
+
+    /**
+     * Menambah anggota secara manual oleh admin.
+     *
+     * @param admin    username admin pelaku
+     * @param nama     nama anggota
+     * @param jabatan  jabatan anggota
+     * @param idDivisi kode divisi tujuan
+     * @return anggota yang dibuat
+     * @throws NoSuchElementException   jika divisi tidak ada
+     * @throws IllegalArgumentException jika input kosong
+     * @throws IllegalStateException    jika kuota divisi penuh
+     */
+    public Anggota tambahAnggota(String admin, String nama, String jabatan, String idDivisi) {
+        wajib(nama, "Nama anggota");
+        wajib(jabatan, "Jabatan");
+        Divisi divisi = cariDivisi(idDivisi);
+        cekKuota(divisi);
+        Anggota anggota = new Anggota(nextKode("A", idAnggota()), nama.trim(), jabatan.trim(),
+                divisi.getId(), Anggota.TANPA_AKUN);
+        anggotaList.add(anggota);
+        catatAdmin(admin, "TAMBAH ANGGOTA", anggota.getId() + " - " + anggota.getNama() + " ke " + divisi.getNama());
+        return anggota;
+    }
+
+    /**
+     * Mengubah data anggota (nama, jabatan, atau pindah divisi).
+     *
+     * @param admin    username admin pelaku
+     * @param id       kode anggota
+     * @param nama     nama baru
+     * @param jabatan  jabatan baru
+     * @param idDivisi kode divisi baru
+     * @throws NoSuchElementException   jika anggota atau divisi tidak ada
+     * @throws IllegalArgumentException jika input kosong
+     * @throws IllegalStateException    jika divisi tujuan penuh
+     */
+    public void editAnggota(String admin, String id, String nama, String jabatan, String idDivisi) {
+        Anggota anggota = cariAnggota(id);
+        wajib(nama, "Nama anggota");
+        wajib(jabatan, "Jabatan");
+        Divisi tujuan = cariDivisi(idDivisi);
+        if (!tujuan.getId().equals(anggota.getIdDivisi())) {
+            cekKuota(tujuan);
+            lepasTugasMilik(anggota);
+            anggota.setIdDivisi(tujuan.getId());
+        }
+        anggota.setNama(nama.trim());
+        anggota.setJabatan(jabatan.trim());
+        catatAdmin(admin, "EDIT ANGGOTA", anggota.getId() + " - " + anggota.getNama());
+    }
+
+    /**
+     * Menghapus anggota. Tugas yang sedang dikerjakan anggota tersebut dikembalikan ke status TERSEDIA.
+     *
+     * @param admin username admin pelaku
+     * @param id    kode anggota
+     * @throws NoSuchElementException jika anggota tidak ada
+     */
+    public void hapusAnggota(String admin, String id) {
+        Anggota anggota = cariAnggota(id);
+        lepasTugasMilik(anggota);
+        anggotaList.remove(anggota);
+        catatAdmin(admin, "HAPUS ANGGOTA", anggota.getId() + " - " + anggota.getNama());
+    }
+
+    /**
+     * Member mendaftar menjadi panitia pada sebuah divisi. Pendaftaran berstatus MENUNGGU dan baru
+     * resmi menjadi anggota setelah diverifikasi admin. Member yang pendaftarannya DITOLAK boleh mendaftar ulang.
+     *
+     * @param username username member
+     * @param idDivisi kode divisi tujuan
+     * @return data pendaftaran (berstatus MENUNGGU)
+     * @throws NoSuchElementException jika divisi atau akun tidak ada
+     * @throws IllegalStateException  jika sudah menjadi anggota, masih menunggu verifikasi, atau kuota penuh
+     */
+    public Anggota daftarPanitia(String username, String idDivisi) {
+        Account akun = accounts.get(username.toLowerCase());
+        if (akun == null) {
+            throw new NoSuchElementException("Akun '" + username + "' tidak ditemukan.");
+        }
+        Anggota lama = cariAnggotaByUsername(username);
+        if (lama != null && lama.getStatus() == Anggota.Status.AKTIF) {
+            throw new IllegalStateException("Anda sudah menjadi anggota divisi " + cariDivisi(lama.getIdDivisi()).getNama() + ".");
+        }
+        if (lama != null && lama.getStatus() == Anggota.Status.MENUNGGU) {
+            throw new IllegalStateException("Pendaftaran Anda ke divisi " + cariDivisi(lama.getIdDivisi()).getNama()
+                    + " masih menunggu verifikasi admin.");
+        }
+        Divisi divisi = cariDivisi(idDivisi);
+        cekKuota(divisi);
+        Anggota pendaftaran = lama;
+        if (lama != null) {
+            lama.setIdDivisi(divisi.getId());
+            lama.setStatus(Anggota.Status.MENUNGGU);
+        } else {
+            pendaftaran = new Anggota(nextKode("A", idAnggota()), akun.getNamaLengkap(), "Staff",
+                    divisi.getId(), akun.getUsername(), Anggota.Status.MENUNGGU);
+            anggotaList.add(pendaftaran);
+        }
+        catatMember(username, "DAFTAR PANITIA", "Mendaftar ke divisi " + divisi.getNama() + " (menunggu verifikasi admin)");
+        return pendaftaran;
+    }
+
+    /**
+     * Mengambil daftar pendaftaran panitia yang menunggu verifikasi admin.
+     *
+     * @return daftar pendaftaran panitia yang menunggu verifikasi admin
+     */
+    public List<Anggota> getPendaftaranMenunggu() {
+        return anggotaList.stream()
+                .filter(a -> a.getStatus() == Anggota.Status.MENUNGGU)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Mencari pendaftaran panitia yang sedang menunggu verifikasi.
+     *
+     * @param id kode pendaftaran (kode anggota)
+     * @return pendaftaran yang ditemukan
+     * @throws NoSuchElementException jika kode tidak ada atau pendaftaran tidak sedang menunggu
+     */
+    public Anggota cariPendaftaran(String id) {
+        for (Anggota a : anggotaList) {
+            if (a.getStatus() == Anggota.Status.MENUNGGU && a.getId().equalsIgnoreCase(id.trim())) {
+                return a;
+            }
+        }
+        throw new NoSuchElementException("Pendaftaran dengan kode '" + id + "' tidak ditemukan atau sudah diverifikasi.");
+    }
+
+    /**
+     * Admin memverifikasi pendaftaran panitia. Jika diterima, member resmi menjadi anggota divisi (AKTIF);
+     * jika ditolak, statusnya menjadi DITOLAK dan member boleh mendaftar ulang.
+     *
+     * @param admin  username admin pelaku
+     * @param id     kode pendaftaran (kode anggota)
+     * @param terima true untuk menerima, false untuk menolak
+     * @throws NoSuchElementException jika pendaftaran tidak ditemukan
+     * @throws IllegalStateException  jika diterima tetapi kuota divisi sudah penuh
+     */
+    public void verifikasiPendaftaran(String admin, String id, boolean terima) {
+        Anggota pendaftaran = cariPendaftaran(id);
+        Divisi divisi = cariDivisi(pendaftaran.getIdDivisi());
+        String hasil;
+        if (terima) {
+            cekKuota(divisi);
+            pendaftaran.setStatus(Anggota.Status.AKTIF);
+            hasil = "DITERIMA";
+        } else {
+            pendaftaran.setStatus(Anggota.Status.DITOLAK);
+            hasil = "DITOLAK";
+        }
+        catatAdmin(admin, "VERIFIKASI PANITIA", pendaftaran.getNama() + " -> divisi " + divisi.getNama() + " " + hasil);
+        catatMember(pendaftaran.getUsername(), "VERIFIKASI PANITIA",
+                "Pendaftaran ke divisi " + divisi.getNama() + " " + hasil);
+    }
+
 
 
 
