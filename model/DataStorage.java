@@ -493,6 +493,188 @@ private final List<Divisi> divisiList = new ArrayList<>();
                 "Pendaftaran ke divisi " + divisi.getNama() + " " + hasil);
     }
 
+        // ======================================================================
+    // TUGAS
+    // ======================================================================
+
+    /**
+     * Mengambil salinan daftar seluruh tugas.
+     *
+     * @return salinan daftar seluruh tugas
+     */
+    public List<Tugas> getTugasList() {
+        return new ArrayList<>(tugasList);
+    }
+
+    /**
+     * Mengambil tugas pada satu divisi.
+     *
+     * @param idDivisi kode divisi
+     * @return daftar tugas divisi tersebut
+     */
+    public List<Tugas> getTugasByDivisi(String idDivisi) {
+        return tugasList.stream()
+                .filter(t -> t.getIdDivisi().equalsIgnoreCase(idDivisi))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Mengambil tugas yang sedang/pernah dikerjakan seorang member.
+     *
+     * @param username username member
+     * @return daftar tugas milik member
+     */
+    public List<Tugas> getTugasByPengambil(String username) {
+        return tugasList.stream()
+                .filter(t -> t.getPengambil().equalsIgnoreCase(username))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Mengambil tugas yang menunggu verifikasi admin.
+     *
+     * @return tugas yang menunggu verifikasi admin
+     */
+    public List<Tugas> getTugasMenunggu() {
+        return tugasList.stream()
+                .filter(t -> t.getStatus() == Tugas.Status.MENUNGGU_VERIFIKASI)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Mencari tugas berdasarkan kode.
+     *
+     * @param id kode tugas
+     * @return tugas yang ditemukan
+     * @throws NoSuchElementException jika kode tidak ada
+     */
+    public Tugas cariTugas(String id) {
+        for (Tugas t : tugasList) {
+            if (t.getId().equalsIgnoreCase(id.trim())) {
+                return t;
+            }
+        }
+        throw new NoSuchElementException("Tugas dengan kode '" + id + "' tidak ditemukan.");
+    }
+
+    /**
+     * Menambah tugas baru untuk sebuah divisi.
+     *
+     * @param admin     username admin pelaku
+     * @param judul     judul tugas
+     * @param deskripsi deskripsi tugas
+     * @param idDivisi  kode divisi pemilik tugas
+     * @param deadline  tenggat dengan format yyyy-MM-dd
+     * @return tugas yang dibuat
+     * @throws NoSuchElementException   jika divisi tidak ada
+     * @throws IllegalArgumentException jika input kosong atau format tanggal salah
+     */
+    public Tugas tambahTugas(String admin, String judul, String deskripsi, String idDivisi, String deadline) {
+        wajib(judul, "Judul tugas");
+        Divisi divisi = cariDivisi(idDivisi);
+        Tugas tugas = new Tugas(nextKode("T", idTugas()), judul.trim(), deskripsi.trim(),
+                divisi.getId(), parseTanggal(deadline));
+        tugasList.add(tugas);
+        catatAdmin(admin, "TAMBAH TUGAS", tugas.getId() + " - " + tugas.getJudul() + " (" + divisi.getNama() + ")");
+        return tugas;
+    }
+
+    /**
+     * Mengubah judul, deskripsi, dan tenggat tugas.
+     *
+     * @param admin     username admin pelaku
+     * @param id        kode tugas
+     * @param judul     judul baru
+     * @param deskripsi deskripsi baru
+     * @param deadline  tenggat baru (yyyy-MM-dd)
+     * @throws NoSuchElementException   jika tugas tidak ada
+     * @throws IllegalArgumentException jika input kosong atau format tanggal salah
+     */
+    public void editTugas(String admin, String id, String judul, String deskripsi, String deadline) {
+        Tugas tugas = cariTugas(id);
+        wajib(judul, "Judul tugas");
+        tugas.setDeadline(parseTanggal(deadline));
+        tugas.setJudul(judul.trim());
+        tugas.setDeskripsi(deskripsi.trim());
+        catatAdmin(admin, "EDIT TUGAS", tugas.getId() + " - " + tugas.getJudul());
+    }
+
+    /**
+     * Menghapus tugas.
+     *
+     * @param admin username admin pelaku
+     * @param id    kode tugas
+     * @throws NoSuchElementException jika tugas tidak ada
+     */
+    public void hapusTugas(String admin, String id) {
+        Tugas tugas = cariTugas(id);
+        tugasList.remove(tugas);
+        catatAdmin(admin, "HAPUS TUGAS", tugas.getId() + " - " + tugas.getJudul());
+    }
+
+    /**
+     * Member (yang sudah resmi menjadi panitia) mengambil tugas yang tersedia pada divisinya.
+     *
+     * @param username username member
+     * @param idTugas  kode tugas
+     * @throws NoSuchElementException jika tugas tidak ada
+     * @throws IllegalStateException  jika member belum resmi jadi panitia, tugas milik divisi lain, atau tugas sudah diambil
+     */
+    public void ambilTugas(String username, String idTugas) {
+        Anggota anggota = cariAnggotaAktifByUsername(username);
+        if (anggota == null) {
+            throw new IllegalStateException("Anda belum resmi menjadi panitia divisi mana pun.");
+        }
+        Tugas tugas = cariTugas(idTugas);
+        if (!tugas.getIdDivisi().equals(anggota.getIdDivisi())) {
+            throw new IllegalStateException("Tugas ini bukan milik divisi Anda.");
+        }
+        if (tugas.getStatus() != Tugas.Status.TERSEDIA) {
+            throw new IllegalStateException("Tugas ini sudah diambil (" + tugas.getStatus() + ").");
+        }
+        tugas.setStatus(Tugas.Status.DIAMBIL);
+        tugas.setPengambil(username);
+        catatMember(username, "AMBIL TUGAS", tugas.getId() + " - " + tugas.getJudul());
+    }
+
+    /**
+     * Member mengajukan tugas yang dikerjakannya sebagai selesai (menunggu verifikasi admin).
+     *
+     * @param username username member
+     * @param idTugas  kode tugas
+     * @throws NoSuchElementException jika tugas tidak ada
+     * @throws IllegalStateException  jika tugas bukan milik member atau statusnya bukan DIAMBIL
+     */
+    public void ajukanSelesai(String username, String idTugas) {
+        Tugas tugas = cariTugas(idTugas);
+        if (!tugas.getPengambil().equalsIgnoreCase(username) || tugas.getStatus() != Tugas.Status.DIAMBIL) {
+            throw new IllegalStateException("Tugas ini bukan tugas Anda yang sedang dikerjakan.");
+        }
+        tugas.setStatus(Tugas.Status.MENUNGGU_VERIFIKASI);
+        catatMember(username, "AJUKAN SELESAI", tugas.getId() + " - " + tugas.getJudul());
+    }
+
+    /**
+     * Admin memverifikasi tugas yang diajukan selesai. Jika ditolak, tugas kembali ke status DIAMBIL.
+     *
+     * @param admin   username admin pelaku
+     * @param idTugas kode tugas
+     * @param terima  true untuk menerima, false untuk menolak
+     * @throws NoSuchElementException jika tugas tidak ada
+     * @throws IllegalStateException  jika tugas tidak sedang menunggu verifikasi
+     */
+    public void verifikasiTugas(String admin, String idTugas, boolean terima) {
+        Tugas tugas = cariTugas(idTugas);
+        if (tugas.getStatus() != Tugas.Status.MENUNGGU_VERIFIKASI) {
+            throw new IllegalStateException("Tugas ini tidak sedang menunggu verifikasi.");
+        }
+        tugas.setStatus(terima ? Tugas.Status.SELESAI : Tugas.Status.DIAMBIL);
+        String hasil = terima ? "DITERIMA" : "DITOLAK (perlu dikerjakan ulang)";
+        catatAdmin(admin, "VERIFIKASI TUGAS", tugas.getId() + " - " + tugas.getJudul() + " -> " + hasil);
+        catatMember(tugas.getPengambil(), "HASIL VERIFIKASI", tugas.getId() + " - " + tugas.getJudul() + " " + hasil);
+    }
+
+
 
 
 
