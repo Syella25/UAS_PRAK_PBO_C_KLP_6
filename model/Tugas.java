@@ -25,33 +25,7 @@ public class Tugas {
 
     private final String id;
     private String judul;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-private String deskripsi;
+    private String deskripsi;
     private final String idDivisi;
     private LocalDate deadline;
     private Status status;
@@ -131,86 +105,86 @@ private String deskripsi;
      *
      * @param judul judul baru
      */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    public void setJudul(String judul) {
+        this.judul = judul;
+    }
+
+    /**
+     * Mengambil deskripsi tugas.
+     *
+     * @return deskripsi tugas
+     */
+    public String getDeskripsi() {
+        return deskripsi;
+    }
+
+    /**
+     * Mengubah deskripsi.
+     *
+     * @param deskripsi deskripsi baru
+     */
+    public void setDeskripsi(String deskripsi) {
+        this.deskripsi = deskripsi;
+    }
+
+    /**
+     * Mengambil kode divisi pemilik tugas.
+     *
+     * @return kode divisi pemilik tugas
+     */
+    public String getIdDivisi() {
+        return idDivisi;
+    }
+
+    /**
+     * Mengambil tenggat tugas.
+     *
+     * @return tenggat tugas
+     */
+    public LocalDate getDeadline() {
+        return deadline;
+    }
+
+    /**
+     * Mengubah tenggat.
+     *
+     * @param deadline tenggat baru
+     */
+    public void setDeadline(LocalDate deadline) {
+        this.deadline = deadline;
+    }
+
+    /**
+     * Mengambil status tugas saat ini.
+     *
+     * @return status tugas saat ini
+     */
+    public Status getStatus() {
+        return status;
+    }
+
+    /**
+     * Mengubah status.
+     *
+     * @param status status baru
+     */
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    /**
+     * Mengambil username pengambil tugas, atau {@link #BELUM_DIAMBIL}.
+     *
+     * @return username pengambil tugas, atau {@link #BELUM_DIAMBIL}
+     */
+    public String getPengambil() {
+        return pengambil;
+    }
+
+    /**
+     * Mengubah username pengambil.
+     *
+     * @param pengambil username pengambil baru
      */
     public void setPengambil(String pengambil) {
         this.pengambil = pengambil;
